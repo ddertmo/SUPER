@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assign Office — CIVILWATCH Admin</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="assets/css/variables.css" />
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/sidebar.css" />
+  <link rel="stylesheet" href="assets/css/navbar.css" />
+  <link rel="stylesheet" href="assets/css/cards.css" />
+  <link rel="stylesheet" href="assets/css/buttons.css" />
+  <link rel="stylesheet" href="assets/css/tables.css" />
+  <link rel="stylesheet" href="assets/css/badges.css" />
+  <link rel="stylesheet" href="assets/css/forms.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+  <style>
+    .back-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 14px; font-weight: 500; color: var(--primary);
+      cursor: pointer; margin-bottom: 18px; transition: var(--transition); text-decoration: none;
+    }
+    .back-link:hover { color: var(--primary-dark); }
+    .back-link .material-symbols-outlined { font-size: 18px; }
+
+    /* Report summary card — matches reference exactly */
+    .report-summary-card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      padding: 20px 24px;
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      margin-bottom: 24px;
+    }
+    .report-summary-photo {
+      width: 120px;
+      height: 110px;
+      border-radius: var(--radius-md);
+      object-fit: cover;
+      background: var(--gray-100);
+      flex-shrink: 0;
+    }
+    .report-summary-fields {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px 28px;
+    }
+    .summary-field { display: flex; flex-direction: column; gap: 3px; }
+    .summary-field-row {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .summary-field-icon {
+      width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .summary-field-icon .material-symbols-outlined { font-size: 16px; color: var(--gray-400); }
+    .summary-field-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-400); font-weight: 600; }
+    .summary-field-value { font-size: 14px; font-weight: 600; color: var(--gray-800); }
+
+    /* Two-column assign layout */
+    .assign-layout {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* Section headers — plain numbered like reference */
+    .section-heading {
+      margin-bottom: 12px;
+    }
+    .section-heading-title {
+      font-size: 16px; font-weight: 700; color: var(--gray-900);
+    }
+    .section-heading-sub {
+      font-size: 13px; color: var(--gray-500); margin-top: 2px;
+    }
+
+    /* Office card — matches reference styling */
+    .office-card-ref {
+      border: 2px solid var(--primary);
+      background: var(--primary-light);
+      border-radius: var(--radius-lg);
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      margin-bottom: 14px;
+    }
+    .office-card-ref:not(.selected) {
+      border-color: var(--gray-200);
+      background: var(--white);
+    }
+    .office-card-ref:not(.selected):hover { border-color: var(--primary); background: var(--primary-light); }
+    .ocr-icon {
+      width: 46px; height: 46px;
+      background: var(--primary-light);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .office-card-ref.selected .ocr-icon { background: rgba(26,86,219,0.15); }
+    .ocr-icon .material-symbols-outlined { font-size: 24px; color: var(--primary); }
+    .ocr-info { flex: 1; }
+    .ocr-name-row {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
+    }
+    .ocr-name { font-size: 15px; font-weight: 700; color: var(--gray-900); }
+    .ocr-badge {
+      background: var(--primary); color: var(--white);
+      font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: var(--radius-full); letter-spacing: 0.3px;
+    }
+    .ocr-desc { font-size: 13px; color: var(--gray-500); line-height: 1.5; }
+    .ocr-check {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; opacity: 0; transition: var(--transition);
+    }
+    .office-card-ref.selected .ocr-check { opacity: 1; }
+    .ocr-check .material-symbols-outlined { font-size: 15px; color: white; }
+
+    /* "Or choose another office" */
+    .other-office-wrap {
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; gap: 0;
+      overflow: hidden;
+      background: var(--white);
+    }
+    .other-office-prefix {
+      padding: 0 14px; height: 44px;
+      display: flex; align-items: center;
+      border-right: 1.5px solid var(--gray-200);
+      background: var(--gray-50);
+      flex-shrink: 0;
+    }
+    .other-office-prefix .material-symbols-outlined { font-size: 18px; color: var(--gray-500); }
+    .other-office-select {
+      flex: 1; height: 44px;
+      border: none; outline: none;
+      padding: 0 14px;
+      font-size: 14px; color: var(--gray-700);
+      background: transparent;
+      font-family: var(--font-family);
+      cursor: pointer;
+    }
+
+    /* Priority selector — matches reference pill style */
+    .priority-pills {
+      display: flex; gap: 10px;
+    }
+    .priority-pill {
+      flex: 1; height: 42px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      font-size: 14px; font-weight: 600; color: var(--gray-600);
+      cursor: pointer; transition: var(--transition); background: var(--white);
+    }
+    .priority-pill:hover { border-color: var(--gray-300); }
+    .priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .priority-pill[data-p="low"]    .priority-dot { background: #10B981; }
+    .priority-pill[data-p="medium"] .priority-dot { background: #F59E0B; }
+    .priority-pill[data-p="high"]   .priority-dot { background: #EF4444; }
+    .priority-pill.active[data-p="low"]    { border-color: #10B981; background: #ECFDF5; color: #065F46; }
+    .priority-pill.active[data-p="medium"] { border-color: #F59E0B; background: #FFFBEB; color: #B45309; }
+    .priority-pill.active[data-p="high"]   { border-color: #EF4444; background: #FEF2F2; color: #B91C1C; }
+
+    /* Right side info cards */
+    .right-card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      padding: 18px;
+    }
+    .right-card-tip  { background: #F0F7FF; border-color: #BFDBFE; }
+    .right-card-warn { background: #FFFBEB; border-color: #FDE68A; }
+
+    .rc-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+    .rc-icon {
+      width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .rc-icon-tip  { background: #DBEAFE; }
+    .rc-icon-why  { background: #EEF3FF; }
+    .rc-icon-warn { background: #FEF3C7; }
+    .rc-icon .material-symbols-outlined { font-size: 20px; }
+    .rc-icon-tip  .material-symbols-outlined { color: #1A56DB; }
+    .rc-icon-why  .material-symbols-outlined { color: #1A56DB; }
+    .rc-icon-warn .material-symbols-outlined { color: #D97706; }
+    .rc-title { font-size: 14px; font-weight: 700; color: var(--gray-900); padding-top: 2px; }
+    .rc-body { font-size: 13px; color: var(--gray-600); line-height: 1.6; }
+    .rc-sub-label { font-size: 13px; font-weight: 700; color: var(--gray-800); margin: 10px 0 6px; }
+    .rc-list { display: flex; flex-direction: column; gap: 7px; }
+    .rc-list-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--gray-700); }
+    .rc-list-item .material-symbols-outlined { font-size: 16px; color: var(--primary); flex-shrink: 0; }
+
+    /* Action buttons */
+    .assign-actions {
+      display: flex; gap: 12px; justify-content: flex-end;
+      padding-top: 20px; border-top: 1px solid var(--gray-200); margin-top: 20px;
+    }
+  </style>
+</head>
+<body data-page="assign-office">
+<div class="app-wrapper">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-area" id="mainArea">
+    <nav class="navbar" id="navbar"></nav>
+    <main class="page-content">
+
+      <a href="report-details.html?id=CW-2026-241" class="back-link">
+        <span class="material-symbols-outlined">arrow_back</span>
+        Back to Report Details
+      </a>
+
+      <div class="page-header">
+        <h1 class="page-title">Assign to Office</h1>
+        <p class="page-subtitle">Choose the appropriate office that will handle this report.</p>
+      </div>
+
+      <!-- Report Summary Card — matches reference layout -->
+      <div class="report-summary-card">
+        <img class="report-summary-photo"
+             src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=240&h=200&fit=crop&q=80"
+             alt="Damaged Road" />
+        <div class="report-summary-fields">
+          <div class="summary-field">
+            <div class="summary-field-row">
+              <div class="summary-field-icon"><span class="material-symbols-outlined">tag</span></div>
+              <span class="summary-field-label">Report ID</span>
+            </div>
+            <div class="summary-field-value" style="color:var(--primary);font-family:monospace;">CW-2026-021</div>
+          </div>
+          <div class="summary-field">
+            <div class="summary-field-row">
+              <div class="summary-field-icon"><span class="material-symbols-outlined">warning</span></div>
+              <span class="summary-field-label">Issue</span>
+            </div>
+            <div class="summary-field-value">Damaged Road</div>
+          </div>
+          <div class="summary-field">
+            <div class="summary-field-row">
+              <div class="summary-field-icon"><span class="material-symbols-outlined">category</span></div>
+              <span class="summary-field-label">Category</span>
+            </div>
+            <div class="summary-field-value"><span class="badge-infra"><span class="material-symbols-outlined">construction</span>Infrastructure</span></div>
+          </div>
+          <div class="summary-field">
+            <div class="summary-field-row">
+              <div class="summary-field-icon"><span class="material-symbols-outlined">location_on</span></div>
+              <span class="summary-field-label">Barangay</span>
+            </div>
+            <div class="summary-field-value">Aplaya</div>
+          </div>
+          <div class="summary-field">
+            <div class="summary-field-row">
+              <div class="summary-field-icon"><span class="material-symbols-outlined">calendar_today</span></div>
+              <span class="summary-field-label">Date Submitted</span>
+            </div>
+            <div class="summary-field-value">May 21, 2026 &nbsp;·&nbsp; 10:30 AM</div>
+          </div>
+          <div class="summary-field">
+            <div class="summary-field-row">
+              <div class="summary-field-icon"><span class="material-symbols-outlined">person</span></div>
+              <span class="summary-field-label">Submitted By</span>
+            </div>
+            <div class="summary-field-value">Juan Dela Cruz</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main layout -->
+      <div class="assign-layout">
+
+        <!-- LEFT: Form -->
+        <div class="card card-padded">
+
+          <!-- 1. Select Office -->
+          <div class="section-heading">
+            <div class="section-heading-title">1. Select Office</div>
+            <div class="section-heading-sub">We recommend the office below for this report.</div>
+          </div>
+
+          <div class="office-card-ref selected" data-office="CEO" onclick="selectOffice(this,'CEO')">
+            <div class="ocr-icon"><span class="material-symbols-outlined">business</span></div>
+            <div class="ocr-info">
+              <div class="ocr-name-row">
+                <span class="ocr-name">City Engineering Office</span>
+                <span class="ocr-badge">Recommended</span>
+              </div>
+              <div class="ocr-desc">Handles infrastructure issues like roads, sidewalks, drainage, bridges, streetlights, and more.</div>
+            </div>
+            <div class="ocr-check"><span class="material-symbols-outlined">check</span></div>
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <p style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--gray-400);font-weight:600;margin-bottom:8px;">OR CHOOSE ANOTHER OFFICE</p>
+            <div class="other-office-wrap">
+              <div class="other-office-prefix">
+                <span class="material-symbols-outlined">business</span>
+              </div>
+              <select class="other-office-select" id="otherOffice" onchange="selectOtherOffice(this.value)">
+                <option value="">Select another office</option>
+                <option value="CENRO">City Environment and Natural Resources Office (CENRO)</option>
+                <option value="CPDO">City Planning and Development Office (CPDO)</option>
+                <option value="CSWDO">City Social Welfare and Development Office (CSWDO)</option>
+                <option value="CHO">City Health Office (CHO)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="height:1px;background:var(--gray-200);margin:20px 0;"></div>
+
+          <!-- 2. Set Priority -->
+          <div class="section-heading">
+            <div class="section-heading-title">2. Set Priority</div>
+          </div>
+          <div class="priority-pills" id="priorityPills">
+            <div class="priority-pill" data-p="low" onclick="selectPriority(this)">
+              <div class="priority-dot"></div> Low
+            </div>
+            <div class="priority-pill active" data-p="medium" onclick="selectPriority(this)">
+              <div class="priority-dot"></div> Medium
+            </div>
+            <div class="priority-pill" data-p="high" onclick="selectPriority(this)">
+              <div class="priority-dot"></div> High
+            </div>
+          </div>
+
+          <div style="height:1px;background:var(--gray-200);margin:20px 0;"></div>
+
+          <!-- 3. Notes -->
+          <div class="section-heading">
+            <div class="section-heading-title">3. Add Notes <span style="font-weight:400;color:var(--gray-400);font-size:14px;">(Optional)</span></div>
+          </div>
+          <div>
+            <textarea class="form-textarea" id="notesInput"
+              placeholder="Add notes or instructions for the assigned office..."
+              rows="3" maxlength="200" oninput="updateCount(this)"
+              style="width:100%;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);padding:10px 14px;font-size:14px;font-family:var(--font-family);resize:vertical;"></textarea>
+            <div style="text-align:right;font-size:12px;color:var(--gray-400);margin-top:4px;"><span id="charCount">0</span> / 200</div>
+          </div>
+
+          <!-- Actions -->
+          <div class="assign-actions">
+            <button class="btn btn-secondary" onclick="location.href='report-details.html?id=CW-2026-241'">Cancel</button>
+            <button class="btn btn-primary" onclick="doAssign()">
+              <span class="material-symbols-outlined">send</span> Assign Report
+            </button>
+          </div>
+        </div>
+
+        <!-- RIGHT: Info Panel -->
+        <div style="display:flex;flex-direction:column;gap:14px;">
+
+          <!-- Tip -->
+          <div class="right-card right-card-tip">
+            <div class="rc-header">
+              <div class="rc-icon rc-icon-tip"><span class="material-symbols-outlined">lightbulb</span></div>
+              <span class="rc-title">Tip</span>
+            </div>
+            <div class="rc-body">We automatically suggest the best office based on the issue type and category. You can still change it if needed.</div>
+          </div>
+
+          <!-- Why this office -->
+          <div class="right-card">
+            <div class="rc-header">
+              <div class="rc-icon rc-icon-why"><span class="material-symbols-outlined">my_location</span></div>
+              <span class="rc-title">Why this office?</span>
+            </div>
+            <div class="rc-body" id="whyDesc">This office is responsible for infrastructure maintenance and repairs in the city.</div>
+            <div class="rc-sub-label">They will:</div>
+            <div class="rc-list" id="whyList">
+              <div class="rc-list-item"><span class="material-symbols-outlined">check_circle</span>Review and assess the report</div>
+              <div class="rc-list-item"><span class="material-symbols-outlined">check_circle</span>Coordinate inspection if needed</div>
+              <div class="rc-list-item"><span class="material-symbols-outlined">check_circle</span>Take necessary actions</div>
+              <div class="rc-list-item"><span class="material-symbols-outlined">check_circle</span>Update the status and progress</div>
+              <div class="rc-list-item"><span class="material-symbols-outlined">check_circle</span>Resolve the issue</div>
+            </div>
+          </div>
+
+          <!-- Reminder -->
+          <div class="right-card right-card-warn">
+            <div class="rc-header">
+              <div class="rc-icon rc-icon-warn"><span class="material-symbols-outlined">warning</span></div>
+              <span class="rc-title">Reminder</span>
+            </div>
+            <div class="rc-body">Once assigned, the office will be notified and the reporter can track the progress.</div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Success modal -->
+<div class="overlay" id="successOverlay"></div>
+<div class="modal" id="successModal">
+  <div class="modal-box" style="text-align:center;padding:36px 28px;">
+    <div style="width:60px;height:60px;border-radius:50%;background:var(--status-resolved-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+      <span class="material-symbols-outlined" style="font-size:32px;color:var(--status-resolved)">check_circle</span>
+    </div>
+    <div style="font-size:20px;font-weight:700;color:var(--gray-900);margin-bottom:8px;">Report Assigned!</div>
+    <div style="font-size:14px;color:var(--gray-500);margin-bottom:24px;">
+      The report has been successfully assigned to <strong id="assignedOfficeName">City Engineering Office</strong>.
+      The office will be notified and the reporter can now track the progress.
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button class="btn btn-secondary" onclick="location.href='pending-reports.html'">Back to Reports</button>
+      <button class="btn btn-primary" onclick="location.href='monitoring.html'">View in Monitoring</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+let selectedOffice = 'CEO';
+
+function selectOffice(el, code) {
+  document.querySelectorAll('.office-card-ref').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedOffice = code;
+  document.getElementById('otherOffice').value = '';
+}
+
+function selectOtherOffice(val) {
+  if (!val) return;
+  document.querySelectorAll('.office-card-ref').forEach(c => c.classList.remove('selected'));
+  selectedOffice = val;
+  const descs = {
+    'CENRO': 'Handles environmental concerns such as illegal dumping, canal blockage, vegetation, and soil erosion.',
+    'CPDO':  'Handles land use, urban planning, and development-related concerns.',
+    'CSWDO': 'Handles social welfare and community-related concerns.',
+    'CHO':   'Handles public health and sanitation concerns.',
+  };
+  document.getElementById('whyDesc').textContent = descs[val] || 'This office handles the assigned type of concern.';
+}
+
+function selectPriority(el) {
+  document.querySelectorAll('.priority-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function updateCount(el) {
+  document.getElementById('charCount').textContent = el.value.length;
+}
+
+function doAssign() {
+  const names = { 'CEO':'City Engineering Office','CENRO':'CENRO','CPDO':'City Planning and Development Office','CSWDO':'CSWDO','CHO':'City Health Office' };
+  document.getElementById('assignedOfficeName').textContent = names[selectedOffice] || selectedOffice;
+  document.getElementById('successModal').classList.add('active');
+  document.getElementById('successOverlay').classList.add('active');
+}
+
+document.getElementById('successOverlay').onclick = () => {
+  document.getElementById('successModal').classList.remove('active');
+  document.getElementById('successOverlay').classList.remove('active');
+};
+</script>
+</body>
+</html>

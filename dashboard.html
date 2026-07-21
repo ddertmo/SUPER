@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — CIVILWATCH Admin</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="assets/css/variables.css" />
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/sidebar.css" />
+  <link rel="stylesheet" href="assets/css/navbar.css" />
+  <link rel="stylesheet" href="assets/css/cards.css" />
+  <link rel="stylesheet" href="assets/css/buttons.css" />
+  <link rel="stylesheet" href="assets/css/tables.css" />
+  <link rel="stylesheet" href="assets/css/badges.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    /* Dashboard-specific */
+    .dashboard-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 22px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .dashboard-date {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--gray-500);
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      padding: 8px 14px;
+      white-space: nowrap;
+    }
+    .dashboard-date .material-symbols-outlined { font-size: 16px; color: var(--gray-400); }
+
+    /* Activity Feed */
+    .activity-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .activity-icon .material-symbols-outlined { font-size: 17px; }
+    .activity-icon.submit   { background: var(--status-pending-bg);    color: var(--status-pending); }
+    .activity-icon.assign   { background: var(--status-assigned-bg);   color: var(--primary); }
+    .activity-icon.progress { background: var(--status-inprogress-bg); color: var(--status-inprogress); }
+    .activity-icon.resolved { background: var(--status-resolved-bg);   color: var(--status-resolved); }
+    .activity-text { flex: 1; min-width: 0; }
+    .activity-main { font-size: 13px; color: var(--gray-800); line-height: 1.5; }
+    .activity-main strong { color: var(--gray-900); font-weight: 600; }
+    .activity-sub  { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+    .activity-time { font-size: 11px; color: var(--gray-400); white-space: nowrap; flex-shrink: 0; }
+
+    /* Quick Actions */
+    .quick-actions-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .quick-action-btn {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      padding: 16px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+    .quick-action-btn:hover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      box-shadow: var(--shadow-sm);
+    }
+    .quick-action-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .quick-action-icon .material-symbols-outlined { font-size: 22px; }
+    .quick-action-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-700);
+      text-align: center;
+      line-height: 1.3;
+    }
+    .qa-validate .quick-action-icon { background: var(--status-pending-bg); color: var(--status-pending); }
+    .qa-assign   .quick-action-icon { background: var(--primary-light);     color: var(--primary); }
+    .qa-map      .quick-action-icon { background: var(--status-resolved-bg);color: var(--status-resolved); }
+    .qa-notif    .quick-action-icon { background: #F3E8FF; color: #7C3AED; }
+    .qa-analytics .quick-action-icon { background: var(--status-inprogress-bg); color: var(--status-inprogress); }
+    .qa-export   .quick-action-icon { background: var(--gray-100);          color: var(--gray-600); }
+
+    /* Mini map */
+    #dashMap { height: 100%; min-height: 260px; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+    .map-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 10px;
+    }
+    .map-checkboxes { display: flex; gap: 12px; flex-wrap: wrap; }
+    .map-check { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--gray-600); font-weight: 500; cursor: pointer; }
+    .map-check input[type=checkbox] { accent-color: var(--primary); width: 14px; height: 14px; }
+
+    /* Bottom row */
+    .dashboard-bottom {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .dashboard-right { display: grid; grid-template-columns: 1fr; gap: 20px; }
+
+    /* Reports on map card */
+    .map-card { display: flex; flex-direction: column; overflow: hidden; }
+    .map-card-content { flex: 1; min-height: 300px; }
+  </style>
+</head>
+<body data-page="dashboard">
+
+<div class="app-wrapper">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <!-- Main -->
+  <div class="main-area" id="mainArea">
+    <nav class="navbar" id="navbar"></nav>
+
+    <main class="page-content">
+      <!-- Top row -->
+      <div class="dashboard-top">
+        <div>
+          <h1 class="page-title">Welcome back, Super Administrator!</h1>
+          <p class="page-subtitle">Monitor and manage community infrastructure and environmental incidents.</p>
+        </div>
+        <div class="dashboard-date">
+          <span class="material-symbols-outlined">calendar_today</span>
+          <span id="currentDate">May 21, 2025 | Wednesday</span>
+        </div>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="grid-5" id="statCards">
+        <div class="stat-card" onclick="location.href='pending-reports.html'">
+          <div class="stat-icon pending"><span class="material-symbols-outlined">schedule</span></div>
+          <div class="stat-info">
+            <div class="stat-value">24</div>
+            <div class="stat-label">Pending Validation</div>
+            <div class="stat-action">View pending reports <span class="material-symbols-outlined">arrow_forward</span></div>
+          </div>
+        </div>
+        <div class="stat-card" onclick="location.href='monitoring.html'">
+          <div class="stat-icon assigned"><span class="material-symbols-outlined">assignment_ind</span></div>
+          <div class="stat-info">
+            <div class="stat-value">36</div>
+            <div class="stat-label">Assigned to Office</div>
+            <div class="stat-action">View assigned reports <span class="material-symbols-outlined">arrow_forward</span></div>
+          </div>
+        </div>
+        <div class="stat-card" onclick="location.href='monitoring.html'">
+          <div class="stat-icon progress"><span class="material-symbols-outlined">autorenew</span></div>
+          <div class="stat-info">
+            <div class="stat-value">18</div>
+            <div class="stat-label">In Progress</div>
+            <div class="stat-action">View in progress reports <span class="material-symbols-outlined">arrow_forward</span></div>
+          </div>
+        </div>
+        <div class="stat-card" onclick="location.href='resolved-reports.html'">
+          <div class="stat-icon resolved"><span class="material-symbols-outlined">check_circle</span></div>
+          <div class="stat-info">
+            <div class="stat-value">128</div>
+            <div class="stat-label">Resolved</div>
+            <div class="stat-action">View resolved reports <span class="material-symbols-outlined">arrow_forward</span></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon total"><span class="material-symbols-outlined">description</span></div>
+          <div class="stat-info">
+            <div class="stat-value">206</div>
+            <div class="stat-label">Total Reports</div>
+            <div class="stat-action">All time reports <span class="material-symbols-outlined">arrow_forward</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Middle row: Recent Reports + Map -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:20px;">
+
+        <!-- Recent Reports -->
+        <div class="card card-padded">
+          <div class="card-header">
+            <span class="card-title">Recent Reports</span>
+            <a href="pending-reports.html" class="card-link">View all</a>
+          </div>
+          <div class="table-container" style="border:none;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>REFERENCE NO.</th>
+                  <th>ISSUE</th>
+                  <th>BARANGAY</th>
+                  <th>STATUS</th>
+                  <th>DATE SUBMITTED</th>
+                </tr>
+              </thead>
+              <tbody id="recentReportsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Reports on Map -->
+        <div class="card map-card">
+          <div class="map-top-bar">
+            <span class="card-title">Reports on Map</span>
+            <a href="gis-map.html" class="card-link">View full map</a>
+          </div>
+          <div class="map-checkboxes" style="padding: 0 16px 10px; gap:14px;">
+            <label class="map-check"><input type="checkbox" checked> Infrastructure</label>
+            <label class="map-check"><input type="checkbox" checked> Environmental</label>
+            <label class="map-check"><input type="checkbox" checked> In Progress</label>
+          </div>
+          <div class="map-card-content">
+            <div id="dashMap"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom row: Activity + Quick Actions -->
+      <div class="dashboard-bottom">
+
+        <!-- Recent Activity -->
+        <div class="card card-padded">
+          <div class="card-header">
+            <span class="card-title">Recent Activity</span>
+            <span class="card-link">View all</span>
+          </div>
+          <div id="activityFeed">
+            <div class="activity-item">
+              <div class="activity-icon submit"><span class="material-symbols-outlined">add_circle</span></div>
+              <div class="activity-text">
+                <div class="activity-main">New report submitted: <strong>Damaged Sidewalk in Zone I</strong></div>
+                <div class="activity-sub">Submitted by resident</div>
+              </div>
+              <div class="activity-time">10 minutes ago</div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon assign"><span class="material-symbols-outlined">assignment_ind</span></div>
+              <div class="activity-text">
+                <div class="activity-main">Report <strong>#CW-2026-201</strong> assigned to City Engineering Office</div>
+                <div class="activity-sub">By Super Administrator</div>
+              </div>
+              <div class="activity-time">35 minutes ago</div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon progress"><span class="material-symbols-outlined">autorenew</span></div>
+              <div class="activity-text">
+                <div class="activity-main">Report <strong>#CW-2026-199</strong> status updated to <strong>In Progress</strong></div>
+                <div class="activity-sub">By City Engineering Office</div>
+              </div>
+              <div class="activity-time">1 hour ago</div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon resolved"><span class="material-symbols-outlined">check_circle</span></div>
+              <div class="activity-text">
+                <div class="activity-main">Report <strong>#CW-2026-198</strong> marked as <strong>Resolved</strong></div>
+                <div class="activity-sub">By City Environment Office</div>
+              </div>
+              <div class="activity-time">2 hours ago</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card card-padded">
+          <div class="card-header">
+            <span class="card-title">Quick Actions</span>
+          </div>
+          <div class="quick-actions-grid">
+            <a href="pending-reports.html" class="quick-action-btn qa-validate">
+              <div class="quick-action-icon"><span class="material-symbols-outlined">verified</span></div>
+              <span class="quick-action-label">Validate Reports</span>
+            </a>
+            <a href="assign-office.html" class="quick-action-btn qa-assign">
+              <div class="quick-action-icon"><span class="material-symbols-outlined">business</span></div>
+              <span class="quick-action-label">Assign to Office</span>
+            </a>
+            <a href="analytics.html" class="quick-action-btn qa-analytics">
+              <div class="quick-action-icon"><span class="material-symbols-outlined">bar_chart</span></div>
+              <span class="quick-action-label">View Analytics</span>
+            </a>
+            <a href="gis-map.html" class="quick-action-btn qa-map">
+              <div class="quick-action-icon"><span class="material-symbols-outlined">map</span></div>
+              <span class="quick-action-label">Open GIS Map</span>
+            </a>
+            <a href="#" class="quick-action-btn qa-notif" onclick="App.openNotif(); return false;">
+              <div class="quick-action-icon" style="position:relative;">
+                <span class="material-symbols-outlined">notifications</span>
+                <span style="position:absolute;top:-4px;right:-4px;background:#EF4444;color:white;font-size:9px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;">3</span>
+              </div>
+              <span class="quick-action-label">Notifications</span>
+            </a>
+            <a href="#" class="quick-action-btn qa-export" onclick="Utils.showToast('Export feature coming soon','info'); return false;">
+              <div class="quick-action-icon"><span class="material-symbols-outlined">file_download</span></div>
+              <span class="quick-action-label">Export Reports</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+  // Date
+  const now = new Date();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('currentDate').textContent =
+    `${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()} | ${days[now.getDay()]}`;
+
+  // Recent reports table
+  const recentData = [
+    { ref:'CW-2026-218', issue:'Damaged Road',        cat:'Infrastructure', barangay:'Aplaya',    status:'Pending Validation', date:'May 20, 2026 · 09:20 AM' },
+    { ref:'CW-2026-217', issue:'Illegal Dumping',     cat:'Environmental',  barangay:'Carmen',    status:'Assigned',           date:'May 20, 2026 · 08:45 AM' },
+    { ref:'CW-2026-216', issue:'Damaged Sidewalk',    cat:'Infrastructure', barangay:'Zone II',   status:'In Progress',        date:'May 19, 2026 · 04:30 PM' },
+    { ref:'CW-2026-215', issue:'Broken Streetlight',  cat:'Infrastructure', barangay:'Zone III',  status:'Resolved',           date:'May 19, 2026 · 08:20 AM' },
+    { ref:'CW-2026-214', issue:'Blocked Drainage',    cat:'Infrastructure', barangay:'Magsaysay', status:'Pending Validation', date:'May 18, 2026 · 11:05 AM' },
+  ];
+  const tbody = document.getElementById('recentReportsBody');
+  tbody.innerHTML = recentData.map(r => `
+    <tr style="cursor:pointer" onclick="location.href='report-details.html?id=${r.ref}'">
+      <td><span class="ref-id">${r.ref}</span></td>
+      <td>
+        <div class="table-issue">
+          <span class="table-issue-name">${r.issue}</span>
+          <span>${Utils.categoryBadge(r.cat)}</span>
+        </div>
+      </td>
+      <td>${r.barangay}</td>
+      <td>${Utils.statusBadge(r.status)}</td>
+      <td style="color:var(--gray-500); font-size:12px;">${r.date}</td>
+    </tr>
+  `).join('');
+
+  // Mini Leaflet map
+  const dashMap = L.map('dashMap', { zoomControl: true, scrollWheelZoom: false }).setView([6.7490, 125.3570], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors', maxZoom: 19
+  }).addTo(dashMap);
+
+  const pinColors = {
+    'Pending Validation': '#F59E0B',
+    'Assigned':           '#1A56DB',
+    'In Progress':        '#F97316',
+    'Resolved':           '#10B981',
+  };
+
+  const mapPins = [
+    { lat:6.7500, lng:125.3540, issue:'Damaged Road',      status:'In Progress',        category:'Infrastructure' },
+    { lat:6.7420, lng:125.3480, issue:'Illegal Dumping',   status:'Assigned',           category:'Environmental' },
+    { lat:6.7480, lng:125.3520, issue:'Blocked Drainage',  status:'Pending Validation', category:'Infrastructure' },
+    { lat:6.7530, lng:125.3570, issue:'Broken Streetlight',status:'Resolved',           category:'Infrastructure' },
+    { lat:6.7610, lng:125.3680, issue:'Overgrown Vegetation',status:'Assigned',         category:'Environmental' },
+    { lat:6.7560, lng:125.3600, issue:'Damaged Sidewalk',  status:'In Progress',        category:'Infrastructure' },
+  ];
+
+  mapPins.forEach(p => {
+    const color = pinColors[p.status] || '#9CA3AF';
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="width:26px;height:26px;border-radius:50%;background:${color};border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
+      iconSize: [26,26], iconAnchor: [13,13]
+    });
+    L.marker([p.lat, p.lng], { icon })
+      .addTo(dashMap)
+      .bindPopup(`<div style="font-size:13px;font-weight:600;color:#111">${p.issue}</div><div style="font-size:11px;color:#6B7280;margin-top:3px;">${p.status}</div>`);
+  });
+</script>
+</body>
+</html>
